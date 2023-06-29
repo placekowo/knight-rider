@@ -1,0 +1,134 @@
+
+knight-rider.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         00000070  00000000  00000000  00000054  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .data         00000000  00800060  00800060  000000c4  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  2 .comment      00000030  00000000  00000000  000000c4  2**0
+                  CONTENTS, READONLY
+  3 .note.gnu.avr.deviceinfo 0000003c  00000000  00000000  000000f4  2**2
+                  CONTENTS, READONLY
+  4 .debug_aranges 00000020  00000000  00000000  00000130  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  5 .debug_info   0000053a  00000000  00000000  00000150  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_abbrev 000004bc  00000000  00000000  0000068a  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_line   00000232  00000000  00000000  00000b46  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_frame  00000024  00000000  00000000  00000d78  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_str    00000300  00000000  00000000  00000d9c  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 10 .debug_loc    0000001e  00000000  00000000  0000109c  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 11 .debug_ranges 00000010  00000000  00000000  000010ba  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	0e c0       	rjmp	.+28     	; 0x1e <__ctors_end>
+   2:	15 c0       	rjmp	.+42     	; 0x2e <__bad_interrupt>
+   4:	14 c0       	rjmp	.+40     	; 0x2e <__bad_interrupt>
+   6:	13 c0       	rjmp	.+38     	; 0x2e <__bad_interrupt>
+   8:	12 c0       	rjmp	.+36     	; 0x2e <__bad_interrupt>
+   a:	11 c0       	rjmp	.+34     	; 0x2e <__bad_interrupt>
+   c:	10 c0       	rjmp	.+32     	; 0x2e <__bad_interrupt>
+   e:	0f c0       	rjmp	.+30     	; 0x2e <__bad_interrupt>
+  10:	0e c0       	rjmp	.+28     	; 0x2e <__bad_interrupt>
+  12:	0d c0       	rjmp	.+26     	; 0x2e <__bad_interrupt>
+  14:	0c c0       	rjmp	.+24     	; 0x2e <__bad_interrupt>
+  16:	0b c0       	rjmp	.+22     	; 0x2e <__bad_interrupt>
+  18:	0a c0       	rjmp	.+20     	; 0x2e <__bad_interrupt>
+  1a:	09 c0       	rjmp	.+18     	; 0x2e <__bad_interrupt>
+  1c:	08 c0       	rjmp	.+16     	; 0x2e <__bad_interrupt>
+
+0000001e <__ctors_end>:
+  1e:	11 24       	eor	r1, r1
+  20:	1f be       	out	0x3f, r1	; 63
+  22:	cf e5       	ldi	r28, 0x5F	; 95
+  24:	d2 e0       	ldi	r29, 0x02	; 2
+  26:	de bf       	out	0x3e, r29	; 62
+  28:	cd bf       	out	0x3d, r28	; 61
+  2a:	02 d0       	rcall	.+4      	; 0x30 <main>
+  2c:	1f c0       	rjmp	.+62     	; 0x6c <_exit>
+
+0000002e <__bad_interrupt>:
+  2e:	e8 cf       	rjmp	.-48     	; 0x0 <__vectors>
+
+00000030 <main>:
+
+#define BLINK_DELAY_MS 100
+
+int main(void)
+{
+	DDRB = 0b00011111; // DDR = data direction register, port B. ddb1 to ddb5 set as output.
+  30:	8f e1       	ldi	r24, 0x1F	; 31
+  32:	87 bb       	out	0x17, r24	; 23
+	PORTB = 0b00010000;	// PORTB = port B data register. start off with ddb1 high, and rest low
+  34:	80 e1       	ldi	r24, 0x10	; 16
+  36:	88 bb       	out	0x18, r24	; 24
+	unsigned char direction;
+	
+	while (1) {
+		if(direction) {
+  38:	99 23       	and	r25, r25
+  3a:	39 f0       	breq	.+14     	; 0x4a <__SREG__+0xb>
+			PORTB = (PORTB << 1); // shift bits left in PORTB left
+  3c:	88 b3       	in	r24, 0x18	; 24
+  3e:	88 0f       	add	r24, r24
+  40:	88 bb       	out	0x18, r24	; 24
+			if(PORTB == 0b00010000) {
+  42:	88 b3       	in	r24, 0x18	; 24
+  44:	80 31       	cpi	r24, 0x10	; 16
+  46:	59 f4       	brne	.+22     	; 0x5e <__SREG__+0x1f>
+  48:	07 c0       	rjmp	.+14     	; 0x58 <__SREG__+0x19>
+				direction = 0;
+			}
+			} else {
+			PORTB = (PORTB >> 1); // shift bits in PORTB right
+  4a:	88 b3       	in	r24, 0x18	; 24
+  4c:	86 95       	lsr	r24
+  4e:	88 bb       	out	0x18, r24	; 24
+			if(PORTB == 0b00000001) {
+  50:	88 b3       	in	r24, 0x18	; 24
+  52:	81 30       	cpi	r24, 0x01	; 1
+  54:	21 f4       	brne	.+8      	; 0x5e <__SREG__+0x1f>
+  56:	02 c0       	rjmp	.+4      	; 0x5c <__SREG__+0x1d>
+	
+	while (1) {
+		if(direction) {
+			PORTB = (PORTB << 1); // shift bits left in PORTB left
+			if(PORTB == 0b00010000) {
+				direction = 0;
+  58:	90 e0       	ldi	r25, 0x00	; 0
+  5a:	01 c0       	rjmp	.+2      	; 0x5e <__SREG__+0x1f>
+			}
+			} else {
+			PORTB = (PORTB >> 1); // shift bits in PORTB right
+			if(PORTB == 0b00000001) {
+				direction = 1;
+  5c:	91 e0       	ldi	r25, 0x01	; 1
+	#else
+		//round up by default
+		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+	#endif
+
+	__builtin_avr_delay_cycles(__ticks_dc);
+  5e:	e7 ea       	ldi	r30, 0xA7	; 167
+  60:	f1 e6       	ldi	r31, 0x61	; 97
+  62:	31 97       	sbiw	r30, 0x01	; 1
+  64:	f1 f7       	brne	.-4      	; 0x62 <__SREG__+0x23>
+  66:	00 c0       	rjmp	.+0      	; 0x68 <__SREG__+0x29>
+  68:	00 00       	nop
+  6a:	e6 cf       	rjmp	.-52     	; 0x38 <main+0x8>
+
+0000006c <_exit>:
+  6c:	f8 94       	cli
+
+0000006e <__stop_program>:
+  6e:	ff cf       	rjmp	.-2      	; 0x6e <__stop_program>
